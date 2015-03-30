@@ -2,3 +2,11 @@ target
 private
 .idea
 *.iml
+android-integration/
+androidtest/
+core/
+glass/
+javase/
+src/
+zxing.appspot.com/
+zxingorg/
