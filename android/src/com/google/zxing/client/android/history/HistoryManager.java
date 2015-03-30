@@ -16,24 +16,6 @@
 
 package com.google.zxing.client.android.history;
 
-import android.database.sqlite.SQLiteException;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.Result;
-import com.google.zxing.client.android.Intents;
-import com.google.zxing.client.android.PreferencesActivity;
-import com.google.zxing.client.android.result.ResultHandler;
-
-import android.app.Activity;
-import android.content.ContentValues;
-import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.net.Uri;
-import android.os.Environment;
-import android.preference.PreferenceManager;
-import android.util.Log;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -43,6 +25,24 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import android.app.Activity;
+import android.content.ContentValues;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.net.Uri;
+import android.os.Environment;
+import android.preference.PreferenceManager;
+import android.util.Log;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.Result;
+import com.google.zxing.client.android.Intents;
+import com.google.zxing.client.android.PreferencesActivity;
+import com.google.zxing.client.android.result.ResultHandler;
 
 /**
  * <p>Manages functionality related to scan history.</p>
@@ -56,17 +56,17 @@ public final class HistoryManager {
   private static final int MAX_ITEMS = 2000;
 
   private static final String[] COLUMNS = {
-      DBHelper.TEXT_COL,
-      DBHelper.DISPLAY_COL,
-      DBHelper.FORMAT_COL,
-      DBHelper.TIMESTAMP_COL,
-      DBHelper.DETAILS_COL,
+      BookDBHelper.TEXT_COL,
+      BookDBHelper.DISPLAY_COL,
+      BookDBHelper.FORMAT_COL,
+      BookDBHelper.TIMESTAMP_COL,
+      BookDBHelper.DETAILS_COL,
   };
 
   private static final String[] COUNT_COLUMN = { "COUNT(1)" };
 
-  private static final String[] ID_COL_PROJECTION = { DBHelper.ID_COL };
-  private static final String[] ID_DETAIL_COL_PROJECTION = { DBHelper.ID_COL, DBHelper.DETAILS_COL };
+  private static final String[] ID_COL_PROJECTION = { BookDBHelper.ID_COL };
+  private static final String[] ID_DETAIL_COL_PROJECTION = { BookDBHelper.ID_COL, BookDBHelper.DETAILS_COL };
 
   private final Activity activity;
   private final boolean enableHistory;
@@ -78,12 +78,12 @@ public final class HistoryManager {
   }
 
   public boolean hasHistoryItems() {
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     SQLiteDatabase db = null;
     Cursor cursor = null;
     try {
       db = helper.getReadableDatabase();
-      cursor = db.query(DBHelper.TABLE_NAME, COUNT_COLUMN, null, null, null, null, null);
+      cursor = db.query(BookDBHelper.TABLE_NAME, COUNT_COLUMN, null, null, null, null, null);
       cursor.moveToFirst();
       return cursor.getInt(0) > 0;
     } finally {
@@ -92,13 +92,13 @@ public final class HistoryManager {
   }
 
   public List<HistoryItem> buildHistoryItems() {
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     List<HistoryItem> items = new ArrayList<>();
     SQLiteDatabase db = null;
     Cursor cursor = null;
     try {
       db = helper.getReadableDatabase();
-      cursor = db.query(DBHelper.TABLE_NAME, COLUMNS, null, null, null, null, DBHelper.TIMESTAMP_COL + " DESC");
+      cursor = db.query(BookDBHelper.TABLE_NAME, COLUMNS, null, null, null, null, BookDBHelper.TIMESTAMP_COL + " DESC");
       while (cursor.moveToNext()) {
         String text = cursor.getString(0);
         String display = cursor.getString(1);
@@ -115,12 +115,12 @@ public final class HistoryManager {
   }
 
   public HistoryItem buildHistoryItem(int number) {
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     SQLiteDatabase db = null;
     Cursor cursor = null;
     try {
       db = helper.getReadableDatabase();
-      cursor = db.query(DBHelper.TABLE_NAME, COLUMNS, null, null, null, null, DBHelper.TIMESTAMP_COL + " DESC");
+      cursor = db.query(BookDBHelper.TABLE_NAME, COLUMNS, null, null, null, null, BookDBHelper.TIMESTAMP_COL + " DESC");
       cursor.move(number + 1);
       String text = cursor.getString(0);
       String display = cursor.getString(1);
@@ -135,17 +135,17 @@ public final class HistoryManager {
   }
   
   public void deleteHistoryItem(int number) {
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     SQLiteDatabase db = null;
     Cursor cursor = null;
     try {
       db = helper.getWritableDatabase();      
-      cursor = db.query(DBHelper.TABLE_NAME,
+      cursor = db.query(BookDBHelper.TABLE_NAME,
                         ID_COL_PROJECTION,
                         null, null, null, null,
-                        DBHelper.TIMESTAMP_COL + " DESC");
+                        BookDBHelper.TIMESTAMP_COL + " DESC");
       cursor.move(number + 1);
-      db.delete(DBHelper.TABLE_NAME, DBHelper.ID_COL + '=' + cursor.getString(0), null);
+      db.delete(BookDBHelper.TABLE_NAME, BookDBHelper.ID_COL + '=' + cursor.getString(0), null);
     } finally {
       close(cursor, db);
     }
@@ -165,17 +165,17 @@ public final class HistoryManager {
     }
 
     ContentValues values = new ContentValues();
-    values.put(DBHelper.TEXT_COL, result.getText());
-    values.put(DBHelper.FORMAT_COL, result.getBarcodeFormat().toString());
-    values.put(DBHelper.DISPLAY_COL, handler.getDisplayContents().toString());
-    values.put(DBHelper.TIMESTAMP_COL, System.currentTimeMillis());
+    values.put(BookDBHelper.TEXT_COL, result.getText());
+    values.put(BookDBHelper.FORMAT_COL, result.getBarcodeFormat().toString());
+    values.put(BookDBHelper.DISPLAY_COL, handler.getDisplayContents().toString());
+    values.put(BookDBHelper.TIMESTAMP_COL, System.currentTimeMillis());
 
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     SQLiteDatabase db = null;
     try {
       db = helper.getWritableDatabase();      
       // Insert the new entry into the DB.
-      db.insert(DBHelper.TABLE_NAME, DBHelper.TIMESTAMP_COL, values);
+      db.insert(BookDBHelper.TABLE_NAME, BookDBHelper.TIMESTAMP_COL, values);
     } finally {
       close(null, db);
     }
@@ -184,18 +184,18 @@ public final class HistoryManager {
   public void addHistoryItemDetails(String itemID, String itemDetails) {
     // As we're going to do an update only we don't need need to worry
     // about the preferences; if the item wasn't saved it won't be udpated
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     SQLiteDatabase db = null;    
     Cursor cursor = null;
     try {
       db = helper.getWritableDatabase();
-      cursor = db.query(DBHelper.TABLE_NAME,
+      cursor = db.query(BookDBHelper.TABLE_NAME,
                         ID_DETAIL_COL_PROJECTION,
-                        DBHelper.TEXT_COL + "=?",
+                        BookDBHelper.TEXT_COL + "=?",
                         new String[] { itemID },
                         null,
                         null,
-                        DBHelper.TIMESTAMP_COL + " DESC",
+                        BookDBHelper.TIMESTAMP_COL + " DESC",
                         "1");
       String oldID = null;
       String oldDetails = null;
@@ -215,8 +215,8 @@ public final class HistoryManager {
         } 
         if (newDetails != null) {
           ContentValues values = new ContentValues();
-          values.put(DBHelper.DETAILS_COL, newDetails);
-          db.update(DBHelper.TABLE_NAME, values, DBHelper.ID_COL + "=?", new String[] { oldID });
+          values.put(BookDBHelper.DETAILS_COL, newDetails);
+          db.update(BookDBHelper.TABLE_NAME, values, BookDBHelper.ID_COL + "=?", new String[] { oldID });
         }
       }
 
@@ -226,31 +226,31 @@ public final class HistoryManager {
   }
 
   private void deletePrevious(String text) {
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     SQLiteDatabase db = null;
     try {
       db = helper.getWritableDatabase();      
-      db.delete(DBHelper.TABLE_NAME, DBHelper.TEXT_COL + "=?", new String[] { text });
+      db.delete(BookDBHelper.TABLE_NAME, BookDBHelper.TEXT_COL + "=?", new String[] { text });
     } finally {
       close(null, db);
     }
   }
 
   public void trimHistory() {
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     SQLiteDatabase db = null;
     Cursor cursor = null;
     try {
       db = helper.getWritableDatabase();      
-      cursor = db.query(DBHelper.TABLE_NAME,
+      cursor = db.query(BookDBHelper.TABLE_NAME,
                         ID_COL_PROJECTION,
                         null, null, null, null,
-                        DBHelper.TIMESTAMP_COL + " DESC");
+                        BookDBHelper.TIMESTAMP_COL + " DESC");
       cursor.move(MAX_ITEMS);
       while (cursor.moveToNext()) {
         String id = cursor.getString(0);
         Log.i(TAG, "Deleting scan history ID " + id);
-        db.delete(DBHelper.TABLE_NAME, DBHelper.ID_COL + '=' + id, null);
+        db.delete(BookDBHelper.TABLE_NAME, BookDBHelper.ID_COL + '=' + id, null);
       }
     } catch (SQLiteException sqle) {
       // We're seeing an error here when called in CaptureActivity.onCreate() in rare cases
@@ -278,15 +278,15 @@ public final class HistoryManager {
    * </ol>
    */
   CharSequence buildHistory() {
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     SQLiteDatabase db = null;
     Cursor cursor = null;
     try {
       db = helper.getWritableDatabase();
-      cursor = db.query(DBHelper.TABLE_NAME,
+      cursor = db.query(BookDBHelper.TABLE_NAME,
                         COLUMNS,
                         null, null, null, null,
-                        DBHelper.TIMESTAMP_COL + " DESC");
+                        BookDBHelper.TIMESTAMP_COL + " DESC");
 
       DateFormat format = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM);
       StringBuilder historyText = new StringBuilder(1000);
@@ -313,11 +313,11 @@ public final class HistoryManager {
   }
   
   void clearHistory() {
-    SQLiteOpenHelper helper = new DBHelper(activity);
+    SQLiteOpenHelper helper = new BookDBHelper(activity);
     SQLiteDatabase db = null;
     try {
       db = helper.getWritableDatabase();      
-      db.delete(DBHelper.TABLE_NAME, null, null);
+      db.delete(BookDBHelper.TABLE_NAME, null, null);
     } finally {
       close(null, db);
     }

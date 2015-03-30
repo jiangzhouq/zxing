@@ -168,11 +168,11 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-    if (prefs.getBoolean(PreferencesActivity.KEY_DISABLE_AUTO_ORIENTATION, true)) {
-      setRequestedOrientation(getCurrentOrientation());
-    } else {
-      setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-    }
+//    if (prefs.getBoolean(PreferencesActivity.KEY_DISABLE_AUTO_ORIENTATION, true)) {
+//      setRequestedOrientation(getCurrentOrientation());
+//    } else {
+//      setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+//    }
 
     resetStatusView();
 
@@ -264,16 +264,16 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     }
   }
 
-  private int getCurrentOrientation() {
-    int rotation = getWindowManager().getDefaultDisplay().getRotation();
-    switch (rotation) {
-      case Surface.ROTATION_0:
-      case Surface.ROTATION_90:
-        return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-      default:
-        return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
-    }
-  }
+//  private int getCurrentOrientation() {
+//    int rotation = getWindowManager().getDefaultDisplay().getRotation();
+//    switch (rotation) {
+//      case Surface.ROTATION_0:
+//      case Surface.ROTATION_90:
+//        return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+//      default:
+//        return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+//    }
+//  }
   
   private static boolean isZXingURL(String dataString) {
     if (dataString == null) {
@@ -652,10 +652,10 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
           intent.putExtra(Intents.Scan.RESULT_UPC_EAN_EXTENSION,
                           metadata.get(ResultMetadataType.UPC_EAN_EXTENSION).toString());
         }
-        Number orientation = (Number) metadata.get(ResultMetadataType.ORIENTATION);
-        if (orientation != null) {
-          intent.putExtra(Intents.Scan.RESULT_ORIENTATION, orientation.intValue());
-        }
+//        Number orientation = (Number) metadata.get(ResultMetadataType.ORIENTATION);
+//        if (orientation != null) {
+//          intent.putExtra(Intents.Scan.RESULT_ORIENTATION, orientation.intValue());
+//        }
         String ecLevel = (String) metadata.get(ResultMetadataType.ERROR_CORRECTION_LEVEL);
         if (ecLevel != null) {
           intent.putExtra(Intents.Scan.RESULT_ERROR_CORRECTION_LEVEL, ecLevel);

@@ -24,7 +24,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
-
 import com.google.zxing.client.android.PreferencesActivity;
 
 /**
@@ -102,9 +101,9 @@ final class CameraConfigurationManager {
     parameters.setPreviewSize(cameraResolution.x, cameraResolution.y);
 
     Log.i(TAG, "Final camera parameters: " + parameters.flatten());
-
+    
     camera.setParameters(parameters);
-
+    camera.setDisplayOrientation(90);
     Camera.Parameters afterParameters = camera.getParameters();
     Camera.Size afterSize = afterParameters.getPreviewSize();
     if (afterSize!= null && (cameraResolution.x != afterSize.width || cameraResolution.y != afterSize.height)) {
