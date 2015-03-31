@@ -514,12 +514,19 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
                       paint);
     }
   }
-
+  public void doubanComplete(String title){
+	  TextView contentsTextView = (TextView) findViewById(R.id.contents_text_view);
+	    contentsTextView.setText(title);
+	    int scaledSize = Math.max(22, 32 - title.length() / 4);
+	    contentsTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
+  }
   // Put up our own UI for how to handle the decoded contents.
   private void handleDecodeInternally(Result rawResult, ResultHandler resultHandler, Bitmap barcode) {
 
     CharSequence displayContents = resultHandler.getDisplayContents();
-
+    displayContents =  (CharSequence)resultHandler.handleAuto(displayContents.toString());
+    Log.d("qiqi", "displayContents:"+displayContents);
+    
     if (copyToClipboard && !resultHandler.areContentsSecure()) {
       ClipboardInterface.setText(displayContents, this);
     }
@@ -569,6 +576,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
       if (metadataText.length() > 0) {
         metadataText.setLength(metadataText.length() - 1);
         metaTextView.setText(metadataText);
+        Log.d("qiqi", "metaTextView:"+metadataText);
         metaTextView.setVisibility(View.VISIBLE);
         metaTextViewLabel.setVisibility(View.VISIBLE);
       }
@@ -578,7 +586,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     contentsTextView.setText(displayContents);
     int scaledSize = Math.max(22, 32 - displayContents.length() / 4);
     contentsTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
-
+    
     TextView supplementTextView = (TextView) findViewById(R.id.contents_supplement_text_view);
     supplementTextView.setText("");
     supplementTextView.setOnClickListener(null);
@@ -589,7 +597,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
                                                      historyManager,
                                                      this);
     }
-
+    
     int buttonCount = resultHandler.getButtonCount();
     ViewGroup buttonView = (ViewGroup) findViewById(R.id.result_button_view);
     buttonView.requestFocus();

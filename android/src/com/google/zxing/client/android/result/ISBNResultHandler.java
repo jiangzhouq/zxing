@@ -16,13 +16,20 @@
 
 package com.google.zxing.client.android.result;
 
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.util.Log;
+
 import com.google.zxing.Result;
+import com.google.zxing.client.android.CaptureActivity;
 import com.google.zxing.client.android.R;
 import com.google.zxing.client.result.ISBNParsedResult;
 import com.google.zxing.client.result.ParsedResult;
-
-import android.app.Activity;
-
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
 /**
  * Handles books encoded by their ISBN values.
  *
@@ -35,9 +42,36 @@ public final class ISBNResultHandler extends ResultHandler {
       R.string.button_search_book_contents,
       R.string.button_custom_product_search
   };
-
+  private Activity mActivity;
+  private static final String STRING_DOUBAN_URL = "https://api.douban.com/v2/book/isbn/:";
+  AsyncHttpClient client = new AsyncHttpClient();
+  private  String result = "";
+  @Override
+	public String handleAuto(String isbn) {
+	  String wholeUrl = STRING_DOUBAN_URL + isbn;
+	  Log.d("qiqi", wholeUrl);
+	  result = "";
+	  client.get(wholeUrl, new DoubanJsonHandler(){});
+	  Log.d("qiqi", "return  " + result);
+	  return result;
+	}
+  class DoubanJsonHandler extends JsonHttpResponseHandler{
+	  @Override
+	public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+		// TODO Auto-generated method stub
+		  try {
+				Log.d("qiqi", statusCode + " " + response.getString("title"));
+				result = response.getString("title");
+				((CaptureActivity)mActivity).doubanComplete(result);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	}
+  }
   public ISBNResultHandler(Activity activity, ParsedResult result, Result rawResult) {
     super(activity, result, rawResult);
+    mActivity = activity;
   }
 
   @Override

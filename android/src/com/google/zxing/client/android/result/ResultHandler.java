@@ -155,7 +155,11 @@ public abstract class ResultHandler {
     String contents = result.getDisplayResult();
     return contents.replace("\r", "");
   }
-
+  
+  public String handleAuto( String str){
+	  return "";
+  }
+  
   /**
    * A string describing the kind of barcode that was found, e.g. "Found contact info".
    *
