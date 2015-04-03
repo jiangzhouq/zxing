@@ -534,6 +534,26 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 	  }
 	  return strB;
   }
+  
+	private void resetResult() {
+		TextView contentsTitle = (TextView) findViewById(R.id.meta_result_title);
+		TextView contentsOriginTitle = (TextView) findViewById(R.id.meta_result_origin_title);
+		TextView contentsAuthor = (TextView) findViewById(R.id.meta_result_author);
+		TextView contentsTranslator = (TextView) findViewById(R.id.meta_result_translator);
+		TextView contentsPublisher = (TextView) findViewById(R.id.meta_result_publisher);
+		TextView contentsPubdate = (TextView) findViewById(R.id.meta_result_pubdate);
+		TextView contentsRating = (TextView) findViewById(R.id.meta_result_rating);
+		ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
+		contentsTitle.setText("...");
+		contentsOriginTitle.setText("...");
+		contentsAuthor.setText("...");
+		contentsTranslator.setText("...");
+		contentsPublisher.setText("...");
+		contentsPubdate.setText("...");
+		contentsRating.setText("...");
+		barcodeImageView.setImageURI(null);
+	}
+  
   public void doubanComplete(Book book, ISBNResultHandler handler){
 	  	TextView contentsTitle = (TextView) findViewById(R.id.meta_result_title);
 	  	TextView contentsOriginTitle = (TextView) findViewById(R.id.meta_result_origin_title);
@@ -603,6 +623,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 			@Override
 			public void onClick(View v) {
 				isbnHandler.saveBookToSQL(mBook, 2);
+				restartPreviewAfterDelay(0L);
 			}
 		});
 	  	Button btnWant = (Button) findViewById(R.id.want);
@@ -611,6 +632,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 			@Override
 			public void onClick(View v) {
 				isbnHandler.saveBookToSQL(mBook, 1);
+				restartPreviewAfterDelay(0L);
 			}
 		});
 //	    int scaledSize = Math.max(22, 32 - book.mTitle.length() / 4);
@@ -859,6 +881,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     statusView.setVisibility(View.VISIBLE);
     viewfinderView.setVisibility(View.VISIBLE);
     lastResult = null;
+    resetResult();
   }
 
   public void drawViewfinder() {
