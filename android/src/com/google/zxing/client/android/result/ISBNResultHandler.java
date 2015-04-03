@@ -66,7 +66,7 @@ public final class ISBNResultHandler extends ResultHandler {
 	public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 		// TODO Auto-generated method stub
 			Book mBook = createBookFromResponse(response);
-			((CaptureActivity)mActivity).doubanComplete(mBook);
+			((CaptureActivity)mActivity).doubanComplete(mBook, ISBNResultHandler.this);
 	}
   }
   private Book createBookFromResponse(JSONObject response){
@@ -102,7 +102,7 @@ public final class ISBNResultHandler extends ResultHandler {
 	  }
 	  return mBook;
   }
-  private void saveBookToSQL(Book mBook, int state){
+  public void saveBookToSQL(Book mBook, int state){
 	  mBook.mAddTime = System.currentTimeMillis();
 	  mBook.mState = state;
 		ContentResolver mResolver = mActivity.getContentResolver();
@@ -135,10 +135,10 @@ public final class ISBNResultHandler extends ResultHandler {
 		values.put(Book.COLUMN_EBOOK_PRICE, mBook.mEBookPrice);
 		values.put(Book.COLUMN_ADD_TIME, mBook.mAddTime);
 		values.put(Book.COLUMN_STATE, mBook.mState);
-//		mResolver.insert(Book.CONTENT_URI_BOOKS, values);
+		mResolver.insert(Book.CONTENT_URI_BOOKS, values);
 		Cursor cur = mResolver.query(Book.CONTENT_URI_BOOKS, null, null, null, null);
 		cur.moveToFirst();
-		Log.d("qiqi", "curc:"+cur.getCount());
+		Log.d("qiqi", "curcount:"+cur.getCount());
 		Log.d("qiqi", "cur:"+cur.getString(4));
   }
   public ISBNResultHandler(Activity activity, ParsedResult result, Result rawResult) {

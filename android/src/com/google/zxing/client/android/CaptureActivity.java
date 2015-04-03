@@ -49,9 +49,11 @@ import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -67,6 +69,7 @@ import com.google.zxing.client.android.history.Book;
 import com.google.zxing.client.android.history.HistoryActivity;
 import com.google.zxing.client.android.history.HistoryItem;
 import com.google.zxing.client.android.history.HistoryManager;
+import com.google.zxing.client.android.result.ISBNResultHandler;
 import com.google.zxing.client.android.result.ResultButtonListener;
 import com.google.zxing.client.android.result.ResultHandler;
 import com.google.zxing.client.android.result.ResultHandlerFactory;
@@ -83,7 +86,7 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
  * @author dswitkin@google.com (Daniel Switkin)
  * @author Sean Owen
  */
-public final class CaptureActivity extends Activity implements SurfaceHolder.Callback {
+public final class CaptureActivity extends Activity implements SurfaceHolder.Callback ,OnClickListener {
 
   private static final String TAG = CaptureActivity.class.getSimpleName();
 
@@ -531,7 +534,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 	  }
 	  return strB;
   }
-  public void doubanComplete(Book book){
+  public void doubanComplete(Book book, ISBNResultHandler handler){
 	  	TextView contentsTitle = (TextView) findViewById(R.id.meta_result_title);
 	  	TextView contentsOriginTitle = (TextView) findViewById(R.id.meta_result_origin_title);
 	  	TextView labelOriginTitle = (TextView) findViewById(R.id.result_page_origin_title);
@@ -592,6 +595,24 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	  	final ISBNResultHandler isbnHandler = handler;
+	  	final Book mBook = book;
+	  	Button btnAdd = (Button) findViewById(R.id.add);
+	  	btnAdd.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				isbnHandler.saveBookToSQL(mBook, 2);
+			}
+		});
+	  	Button btnWant = (Button) findViewById(R.id.want);
+	  	btnWant.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				isbnHandler.saveBookToSQL(mBook, 1);
+			}
+		});
 //	    int scaledSize = Math.max(22, 32 - book.mTitle.length() / 4);
 //	    contentsTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
 //	    contentsOriginTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
@@ -843,4 +864,14 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
   public void drawViewfinder() {
     viewfinderView.drawViewfinder();
   }
+
+@Override
+public void onClick(View v) {
+	switch(v.getId()){
+	case R.id.want:
+		break;
+	case R.id.add:
+		break;
+	}
+}
 }
