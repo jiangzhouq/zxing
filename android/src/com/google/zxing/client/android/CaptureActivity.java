@@ -546,6 +546,10 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 		contentsPubdate.setText("...");
 		contentsRating.setText("...");
 		barcodeImageView.setImageURI(null);
+		Button btnAdd = (Button) findViewById(R.id.add);
+	  	Button btnWant = (Button) findViewById(R.id.want);
+	  	btnAdd.setBackgroundResource(R.drawable.result_btn_bg);
+	  	btnWant.setBackgroundResource(R.drawable.result_btn_bg);
 	}
   
 	private void showToast(String name,int i){
@@ -662,6 +666,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 	  			}
 	  		});
 	  	}else if(stateInSQL == 1){
+	  		btnWant.setBackgroundResource(R.drawable.result_btn_bg_unactive);
 	  		btnAdd.setOnClickListener(new OnClickListener() {
 	  			
 	  			@Override
@@ -677,6 +682,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 	  			}
 	  		});
 	  	}else if(stateInSQL >=2){
+	  		btnAdd.setBackgroundResource(R.drawable.result_btn_bg_unactive);
+	  		btnWant.setBackgroundResource(R.drawable.result_btn_bg_unactive);
 	  		btnAdd.setOnClickListener(new OnClickListener() {
 	  			
 	  			@Override
