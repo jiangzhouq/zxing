@@ -622,16 +622,15 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 			
 			@Override
 			public void onClick(View v) {
-				isbnHandler.saveBookToSQL(mBook, 2);
+				isbnHandler.saveBookToSQL(mBook, Book.BOOK_STATE_HAS);
 				restartPreviewAfterDelay(0L);
 			}
 		});
 	  	Button btnWant = (Button) findViewById(R.id.want);
 	  	btnWant.setOnClickListener(new OnClickListener() {
-			
 			@Override
 			public void onClick(View v) {
-				isbnHandler.saveBookToSQL(mBook, 1);
+				isbnHandler.saveBookToSQL(mBook, Book.BOOK_STATE_WANT);
 				restartPreviewAfterDelay(0L);
 			}
 		});
