@@ -140,4 +140,13 @@
   <string name="result_wifi">发现网络配置</string>
   <string name="sbc_name">Google图书搜索</string>
   <string name="wifi_changing_network">请求连接到网络\u2026</string>
+  <string name="result_page_title">书名</string>
+  <string name="result_page_author">作者</string>
+  <string name="result_page_rating">豆瓣评分</string>
+  <string name="result_page_publisher">出版商</string>
+  <string name="result_page_pubdate">出版年</string>
+  <string name="result_page_origin_title">原作名</string>
+  <string name="result_page_translator">译者</string>
+  <string name="result_control_add">已买</string>
+  <string name="result_control_want">想买</string>
 </resources>

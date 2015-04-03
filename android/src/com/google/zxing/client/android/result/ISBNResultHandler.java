@@ -16,16 +16,23 @@
 
 package com.google.zxing.client.android.result;
 
+import java.security.PublicKey;
+import java.util.HashMap;
+
 import org.apache.http.Header;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.util.Log;
 
 import com.google.zxing.Result;
 import com.google.zxing.client.android.CaptureActivity;
 import com.google.zxing.client.android.R;
+import com.google.zxing.client.android.history.Book;
 import com.google.zxing.client.result.ISBNParsedResult;
 import com.google.zxing.client.result.ParsedResult;
 import com.loopj.android.http.AsyncHttpClient;
@@ -47,27 +54,92 @@ public final class ISBNResultHandler extends ResultHandler {
   AsyncHttpClient client = new AsyncHttpClient();
   private  String result = "";
   @Override
-	public String handleAuto(String isbn) {
+	public void handleAuto(String isbn) {
 	  String wholeUrl = STRING_DOUBAN_URL + isbn;
 	  Log.d("qiqi", wholeUrl);
 	  result = "";
 	  client.get(wholeUrl, new DoubanJsonHandler(){});
 	  Log.d("qiqi", "return  " + result);
-	  return result;
 	}
   class DoubanJsonHandler extends JsonHttpResponseHandler{
 	  @Override
 	public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 		// TODO Auto-generated method stub
-		  try {
-				Log.d("qiqi", statusCode + " " + response.getString("title"));
-				result = response.getString("title");
-				((CaptureActivity)mActivity).doubanComplete(result);
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			Book mBook = createBookFromResponse(response);
+			((CaptureActivity)mActivity).doubanComplete(mBook);
 	}
+  }
+  private Book createBookFromResponse(JSONObject response){
+	  Book mBook = new Book();
+	  try{
+		  mBook.mDoubanId = response.isNull(Book.COLUMN_DOUBAN_ID)?"":response.getString(Book.COLUMN_DOUBAN_ID);
+		  mBook.mISBN10 = response.isNull(Book.COLUMN_ISBN10)?"":response.getString(Book.COLUMN_ISBN10);
+		  mBook.mISBN13 = response.isNull(Book.COLUMN_ISBN13)?"":response.getString(Book.COLUMN_ISBN13);
+		  mBook.mTitle = response.isNull(Book.COLUMN_TITLE)?"":response.getString(Book.COLUMN_TITLE);
+		  mBook.mOriginTitle = response.isNull(Book.COLUMN_ORIGIN_TITLE)?"":response.getString(Book.COLUMN_ORIGIN_TITLE);
+		  mBook.mAltTitle = response.isNull(Book.COLUMN_ALT_TITLE)?"":response.getString(Book.COLUMN_ALT_TITLE);
+		  mBook.mSubTitle = response.isNull(Book.COLUMN_SUB_TITLE)?"":response.getString(Book.COLUMN_SUB_TITLE);
+		  mBook.mUrl = response.isNull(Book.COLUMN_URL)?"":response.getString(Book.COLUMN_URL);
+		  mBook.mAlt = response.isNull(Book.COLUMN_ALT)?"":response.getString(Book.COLUMN_ALT);
+		  mBook.mImage = response.isNull(Book.COLUMN_IMAGE)?"":response.getString(Book.COLUMN_IMAGE);
+		  mBook.mImages = response.isNull(Book.COLUMN_IMAGES)?"":response.getString(Book.COLUMN_IMAGES);
+		  mBook.mAuthor = response.isNull(Book.COLUMN_AUTHOR)?"":response.getString(Book.COLUMN_AUTHOR);
+		  mBook.mTranslator = response.isNull(Book.COLUMN_TRANSLATOR)?"":response.getString(Book.COLUMN_TRANSLATOR);
+		  mBook.mPublisher = response.isNull(Book.COLUMN_PUBLISHER)?"":response.getString(Book.COLUMN_PUBLISHER);
+		  mBook.mPubdate = response.isNull(Book.COLUMN_PUBDATE)?"":response.getString(Book.COLUMN_PUBDATE);
+		  mBook.mRating = response.isNull(Book.COLUMN_RATING)?"":response.getString(Book.COLUMN_RATING);
+		  mBook.mTags = response.isNull(Book.COLUMN_TAGS)?"":response.getString(Book.COLUMN_TAGS);
+		  mBook.mBinding = response.isNull(Book.COLUMN_BINDING)?"":response.getString(Book.COLUMN_BINDING);
+		  mBook.mPrice = response.isNull(Book.COLUMN_PRICE)?"":response.getString(Book.COLUMN_PRICE);
+		  mBook.mSeries = response.isNull(Book.COLUMN_SERIES)?"":response.getString(Book.COLUMN_SERIES);
+		  mBook.mPages = response.isNull(Book.COLUMN_PAGES)?"":response.getString(Book.COLUMN_PAGES);
+		  mBook.mAuthorIntro = response.isNull(Book.COLUMN_AUTHOR_INTRO)?"":response.getString(Book.COLUMN_AUTHOR_INTRO);
+		  mBook.mSummary = response.isNull(Book.COLUMN_SUMMARY)?"":response.getString(Book.COLUMN_SUMMARY);
+		  mBook.mCatelog = response.isNull(Book.COLUMN_CATELOG)?"":response.getString(Book.COLUMN_CATELOG);
+		  mBook.mEBookUrl = response.isNull(Book.COLUMN_EBOOK_URL)?"":response.getString(Book.COLUMN_EBOOK_URL);
+		  mBook.mEBookPrice = response.isNull(Book.COLUMN_EBOOK_PRICE)?"":response.getString(Book.COLUMN_EBOOK_PRICE);
+	  }catch(JSONException e){
+	  }
+	  return mBook;
+  }
+  private void saveBookToSQL(Book mBook, int state){
+	  mBook.mAddTime = System.currentTimeMillis();
+	  mBook.mState = state;
+		ContentResolver mResolver = mActivity.getContentResolver();
+		ContentValues values = new ContentValues();
+		values.put(Book.COLUMN_DOUBAN_ID, mBook.mDoubanId);
+		values.put(Book.COLUMN_ISBN10, mBook.mISBN10);
+		values.put(Book.COLUMN_ISBN13, mBook.mISBN13);
+		values.put(Book.COLUMN_TITLE, mBook.mTitle);
+		values.put(Book.COLUMN_ORIGIN_TITLE, mBook.mOriginTitle);
+		values.put(Book.COLUMN_ALT_TITLE, mBook.mAltTitle);
+		values.put(Book.COLUMN_SUB_TITLE, mBook.mSubTitle);
+		values.put(Book.COLUMN_URL, mBook.mUrl);
+		values.put(Book.COLUMN_ALT, mBook.mAlt);
+		values.put(Book.COLUMN_IMAGE, mBook.mImage);
+		values.put(Book.COLUMN_IMAGES, mBook.mImages);
+		values.put(Book.COLUMN_AUTHOR, mBook.mAuthor);
+		values.put(Book.COLUMN_TRANSLATOR, mBook.mTranslator);
+		values.put(Book.COLUMN_PUBLISHER, mBook.mPublisher);
+		values.put(Book.COLUMN_PUBDATE, mBook.mPubdate);
+		values.put(Book.COLUMN_RATING, mBook.mRating);
+		values.put(Book.COLUMN_TAGS, mBook.mTags);
+		values.put(Book.COLUMN_BINDING, mBook.mBinding);
+		values.put(Book.COLUMN_PRICE, mBook.mPrice);
+		values.put(Book.COLUMN_SERIES, mBook.mSeries);
+		values.put(Book.COLUMN_PAGES, mBook.mPages);
+		values.put(Book.COLUMN_AUTHOR_INTRO,mBook. mAuthorIntro);
+		values.put(Book.COLUMN_SUMMARY, mBook.mSummary);
+		values.put(Book.COLUMN_CATELOG, mBook.mCatelog);
+		values.put(Book.COLUMN_EBOOK_URL, mBook.mEBookUrl);
+		values.put(Book.COLUMN_EBOOK_PRICE, mBook.mEBookPrice);
+		values.put(Book.COLUMN_ADD_TIME, mBook.mAddTime);
+		values.put(Book.COLUMN_STATE, mBook.mState);
+//		mResolver.insert(Book.CONTENT_URI_BOOKS, values);
+		Cursor cur = mResolver.query(Book.CONTENT_URI_BOOKS, null, null, null, null);
+		cur.moveToFirst();
+		Log.d("qiqi", "curc:"+cur.getCount());
+		Log.d("qiqi", "cur:"+cur.getString(4));
   }
   public ISBNResultHandler(Activity activity, ParsedResult result, Result rawResult) {
     super(activity, result, rawResult);

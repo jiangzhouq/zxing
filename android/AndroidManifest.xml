@@ -150,6 +150,8 @@
               android:label="@string/menu_help"
               android:screenOrientation="user"
               android:stateNotNeeded="true"/>
+    <provider android:name="com.google.zxing.client.android.history.BookProvider"
+        android:authorities="com.qjizho.bookstore"></provider>
   </application>
 
 </manifest>

@@ -16,27 +16,21 @@
 
 package com.google.zxing.client.android;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.DecodeHintType;
-import com.google.zxing.Result;
-import com.google.zxing.ResultMetadataType;
-import com.google.zxing.ResultPoint;
-import com.google.zxing.client.android.camera.CameraManager;
-import com.google.zxing.client.android.clipboard.ClipboardInterface;
-import com.google.zxing.client.android.history.HistoryActivity;
-import com.google.zxing.client.android.history.HistoryItem;
-import com.google.zxing.client.android.history.HistoryManager;
-import com.google.zxing.client.android.result.ResultButtonListener;
-import com.google.zxing.client.android.result.ResultHandler;
-import com.google.zxing.client.android.result.ResultHandlerFactory;
-import com.google.zxing.client.android.result.supplement.SupplementalInfoRetriever;
-import com.google.zxing.client.android.share.ShareActivity;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.util.Collection;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.Map;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -52,7 +46,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -63,12 +56,24 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.text.DateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.Map;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.DecodeHintType;
+import com.google.zxing.Result;
+import com.google.zxing.ResultMetadataType;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.client.android.camera.CameraManager;
+import com.google.zxing.client.android.clipboard.ClipboardInterface;
+import com.google.zxing.client.android.history.Book;
+import com.google.zxing.client.android.history.HistoryActivity;
+import com.google.zxing.client.android.history.HistoryItem;
+import com.google.zxing.client.android.history.HistoryManager;
+import com.google.zxing.client.android.result.ResultButtonListener;
+import com.google.zxing.client.android.result.ResultHandler;
+import com.google.zxing.client.android.result.ResultHandlerFactory;
+import com.google.zxing.client.android.result.supplement.SupplementalInfoRetriever;
+import com.google.zxing.client.android.share.ShareActivity;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 /**
  * This activity opens the camera and does the actual scanning on a background thread. It draws a
@@ -514,18 +519,93 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
                       paint);
     }
   }
-  public void doubanComplete(String title){
-	  TextView contentsTextView = (TextView) findViewById(R.id.contents_text_view);
-	    contentsTextView.setText(title);
-	    int scaledSize = Math.max(22, 32 - title.length() / 4);
-	    contentsTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
+  private StringBuilder jsonArrayToString(JSONArray array){
+	  StringBuilder strB = new StringBuilder();
+	  for (int i = 0 ; i < array.length(); i++){
+		 try {
+			strB.append(array.getString(i));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	  }
+	  return strB;
+  }
+  public void doubanComplete(Book book){
+	  	TextView contentsTitle = (TextView) findViewById(R.id.meta_result_title);
+	  	TextView contentsOriginTitle = (TextView) findViewById(R.id.meta_result_origin_title);
+	  	TextView labelOriginTitle = (TextView) findViewById(R.id.result_page_origin_title);
+	  	TextView contentsAuthor = (TextView) findViewById(R.id.meta_result_author);
+	  	TextView contentsTranslator = (TextView) findViewById(R.id.meta_result_translator);
+	  	TextView labelTranslator = (TextView) findViewById(R.id.result_page_translator);
+	  	TextView contentsPublisher = (TextView) findViewById(R.id.meta_result_publisher);
+	  	TextView contentsPubdate = (TextView) findViewById(R.id.meta_result_pubdate);
+	  	TextView contentsRating = (TextView) findViewById(R.id.meta_result_rating);
+	  	
+	  	contentsTitle.setText(book.mTitle);
+	  	if(book.mOriginTitle.isEmpty() || book.mOriginTitle.length() == 0){
+	  		contentsOriginTitle.setVisibility(View.GONE);
+	  		labelOriginTitle.setVisibility(View.GONE);
+	  	}else{
+	  		contentsOriginTitle.setText(book.mOriginTitle);
+	  	}
+	  	try {
+			JSONArray jAuthor = new JSONArray(book.mAuthor);
+			contentsAuthor.setText(jsonArrayToString(jAuthor).toString());
+		} catch (JSONException e1) {
+			e1.printStackTrace();
+			contentsAuthor.setText(book.mAuthor);
+		}
+	  	if(book.mTranslator.isEmpty() || book.mTranslator.length() == 0){
+	  		contentsTranslator.setVisibility(View.GONE);
+	  		labelTranslator.setVisibility(View.GONE);
+	  	}else{
+	  		try {
+	  			Log.d("qiqi", "count:" + book.mTranslator.length());
+	  			JSONArray jTranslator = new JSONArray(book.mTranslator);
+	  			if(jsonArrayToString(jTranslator).toString().length() == 0){
+	  				contentsTranslator.setVisibility(View.GONE);
+		  			labelTranslator.setVisibility(View.GONE);
+	  			}else{
+	  				contentsTranslator.setText(jsonArrayToString(jTranslator).toString());
+	  			}
+	  		} catch (Exception e) {
+	  			contentsTranslator.setVisibility(View.GONE);
+	  			labelTranslator.setVisibility(View.GONE);
+	  		}
+	  	}
+	  	contentsPublisher.setText(book.mPublisher);
+	  	contentsPubdate.setText(book.mPubdate);
+	  	try {
+			contentsRating.setText((new JSONObject(book.mRating)).getString("average"));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			contentsRating.setText("");
+		}
+	  	ImageLoader imageLoader = ImageLoader.getInstance();
+	  	imageLoader.init(ImageLoaderConfiguration.createDefault(this));
+	  	ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
+	  	try {
+			imageLoader.displayImage((new JSONObject(book.mImages)).getString("large"), barcodeImageView);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+//	    int scaledSize = Math.max(22, 32 - book.mTitle.length() / 4);
+//	    contentsTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
+//	    contentsOriginTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
+//	    contentsAuthor.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
+//	    contentsTranslator.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
+//	    contentsPublisher.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
+//	    contentsPubdate.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
+//	    contentsRating.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
   }
   // Put up our own UI for how to handle the decoded contents.
   private void handleDecodeInternally(Result rawResult, ResultHandler resultHandler, Bitmap barcode) {
 
     CharSequence displayContents = resultHandler.getDisplayContents();
-    displayContents =  (CharSequence)resultHandler.handleAuto(displayContents.toString());
-    Log.d("qiqi", "displayContents:"+displayContents);
+    resultHandler.handleAuto(displayContents.toString());
     
     if (copyToClipboard && !resultHandler.areContentsSecure()) {
       ClipboardInterface.setText(displayContents, this);
@@ -542,75 +622,75 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     viewfinderView.setVisibility(View.GONE);
     resultView.setVisibility(View.VISIBLE);
 
-    ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
-    if (barcode == null) {
-      barcodeImageView.setImageBitmap(BitmapFactory.decodeResource(getResources(),
-          R.drawable.launcher_icon));
-    } else {
-      barcodeImageView.setImageBitmap(barcode);
-    }
+//    ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
+//    if (barcode == null) {
+//      barcodeImageView.setImageBitmap(BitmapFactory.decodeResource(getResources(),
+//          R.drawable.launcher_icon));
+//    } else {
+//      barcodeImageView.setImageBitmap(barcode);
+//    }
 
-    TextView formatTextView = (TextView) findViewById(R.id.format_text_view);
-    formatTextView.setText(rawResult.getBarcodeFormat().toString());
+//    TextView formatTextView = (TextView) findViewById(R.id.format_text_view);
+//    formatTextView.setText(rawResult.getBarcodeFormat().toString());
+//
+//    TextView typeTextView = (TextView) findViewById(R.id.type_text_view);
+//    typeTextView.setText(resultHandler.getType().toString());
+//
+//    DateFormat formatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
+//    TextView timeTextView = (TextView) findViewById(R.id.time_text_view);
+//    timeTextView.setText(formatter.format(new Date(rawResult.getTimestamp())));
+//
+//
+//    TextView metaTextView = (TextView) findViewById(R.id.meta_text_view);
+//    View metaTextViewLabel = findViewById(R.id.meta_text_view_label);
+//    metaTextView.setVisibility(View.GONE);
+//    metaTextViewLabel.setVisibility(View.GONE);
+//    Map<ResultMetadataType,Object> metadata = rawResult.getResultMetadata();
+//    if (metadata != null) {
+//      StringBuilder metadataText = new StringBuilder(20);
+//      for (Map.Entry<ResultMetadataType,Object> entry : metadata.entrySet()) {
+//        if (DISPLAYABLE_METADATA_TYPES.contains(entry.getKey())) {
+//          metadataText.append(entry.getValue()).append('\n');
+//        }
+//      }
+//      if (metadataText.length() > 0) {
+//        metadataText.setLength(metadataText.length() - 1);
+//        metaTextView.setText(metadataText);
+//        Log.d("qiqi", "metaTextView:"+metadataText);
+//        metaTextView.setVisibility(View.VISIBLE);
+//        metaTextViewLabel.setVisibility(View.VISIBLE);
+//      }
+//    }
 
-    TextView typeTextView = (TextView) findViewById(R.id.type_text_view);
-    typeTextView.setText(resultHandler.getType().toString());
-
-    DateFormat formatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
-    TextView timeTextView = (TextView) findViewById(R.id.time_text_view);
-    timeTextView.setText(formatter.format(new Date(rawResult.getTimestamp())));
-
-
-    TextView metaTextView = (TextView) findViewById(R.id.meta_text_view);
-    View metaTextViewLabel = findViewById(R.id.meta_text_view_label);
-    metaTextView.setVisibility(View.GONE);
-    metaTextViewLabel.setVisibility(View.GONE);
-    Map<ResultMetadataType,Object> metadata = rawResult.getResultMetadata();
-    if (metadata != null) {
-      StringBuilder metadataText = new StringBuilder(20);
-      for (Map.Entry<ResultMetadataType,Object> entry : metadata.entrySet()) {
-        if (DISPLAYABLE_METADATA_TYPES.contains(entry.getKey())) {
-          metadataText.append(entry.getValue()).append('\n');
-        }
-      }
-      if (metadataText.length() > 0) {
-        metadataText.setLength(metadataText.length() - 1);
-        metaTextView.setText(metadataText);
-        Log.d("qiqi", "metaTextView:"+metadataText);
-        metaTextView.setVisibility(View.VISIBLE);
-        metaTextViewLabel.setVisibility(View.VISIBLE);
-      }
-    }
-
-    TextView contentsTextView = (TextView) findViewById(R.id.contents_text_view);
-    contentsTextView.setText(displayContents);
-    int scaledSize = Math.max(22, 32 - displayContents.length() / 4);
-    contentsTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
+//    TextView contentsTextView = (TextView) findViewById(R.id.contents_text_view);
+//    contentsTextView.setText(displayContents);
+//    int scaledSize = Math.max(22, 32 - displayContents.length() / 4);
+//    contentsTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
     
-    TextView supplementTextView = (TextView) findViewById(R.id.contents_supplement_text_view);
-    supplementTextView.setText("");
-    supplementTextView.setOnClickListener(null);
-    if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
-        PreferencesActivity.KEY_SUPPLEMENTAL, true)) {
-      SupplementalInfoRetriever.maybeInvokeRetrieval(supplementTextView,
-                                                     resultHandler.getResult(),
-                                                     historyManager,
-                                                     this);
-    }
+//    TextView supplementTextView = (TextView) findViewById(R.id.contents_supplement_text_view);
+//    supplementTextView.setText("");
+//    supplementTextView.setOnClickListener(null);
+//    if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
+//        PreferencesActivity.KEY_SUPPLEMENTAL, true)) {
+//      SupplementalInfoRetriever.maybeInvokeRetrieval(supplementTextView,
+//                                                     resultHandler.getResult(),
+//                                                     historyManager,
+//                                                     this);
+//    }
     
-    int buttonCount = resultHandler.getButtonCount();
-    ViewGroup buttonView = (ViewGroup) findViewById(R.id.result_button_view);
-    buttonView.requestFocus();
-    for (int x = 0; x < ResultHandler.MAX_BUTTON_COUNT; x++) {
-      TextView button = (TextView) buttonView.getChildAt(x);
-      if (x < buttonCount) {
-        button.setVisibility(View.VISIBLE);
-        button.setText(resultHandler.getButtonText(x));
-        button.setOnClickListener(new ResultButtonListener(resultHandler, x));
-      } else {
-        button.setVisibility(View.GONE);
-      }
-    }
+//    int buttonCount = resultHandler.getButtonCount();
+//    ViewGroup buttonView = (ViewGroup) findViewById(R.id.result_button_view);
+//    buttonView.requestFocus();
+//    for (int x = 0; x < ResultHandler.MAX_BUTTON_COUNT; x++) {
+//      TextView button = (TextView) buttonView.getChildAt(x);
+//      if (x < buttonCount) {
+//        button.setVisibility(View.VISIBLE);
+//        button.setText(resultHandler.getButtonText(x));
+//        button.setOnClickListener(new ResultButtonListener(resultHandler, x));
+//      } else {
+//        button.setVisibility(View.GONE);
+//      }
+//    }
 
   }
 

@@ -156,8 +156,7 @@ public abstract class ResultHandler {
     return contents.replace("\r", "");
   }
   
-  public String handleAuto( String str){
-	  return "";
+  public void handleAuto( String str){
   }
   
   /**
