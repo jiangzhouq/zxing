@@ -17,9 +17,7 @@
 package com.google.zxing.client.android;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.Map;
 
@@ -31,8 +29,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
@@ -41,7 +39,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -50,7 +47,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -70,10 +66,8 @@ import com.google.zxing.client.android.history.HistoryActivity;
 import com.google.zxing.client.android.history.HistoryItem;
 import com.google.zxing.client.android.history.HistoryManager;
 import com.google.zxing.client.android.result.ISBNResultHandler;
-import com.google.zxing.client.android.result.ResultButtonListener;
 import com.google.zxing.client.android.result.ResultHandler;
 import com.google.zxing.client.android.result.ResultHandlerFactory;
-import com.google.zxing.client.android.result.supplement.SupplementalInfoRetriever;
 import com.google.zxing.client.android.share.ShareActivity;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -554,7 +548,39 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 		barcodeImageView.setImageURI(null);
 	}
   
+	private void showToast(String name,int i){
+		switch(i){
+		case ISBNResultHandler.INSERT_ADD_SUCCESS:
+			Toast.makeText(this, String.format(getResources().getString(R.string.book_insert_add_success), name), Toast.LENGTH_SHORT).show();
+			break;
+		case ISBNResultHandler.INSERT_ADD_FAILED:
+			Toast.makeText(this, String.format(getResources().getString(R.string.book_insert_add_failed), name), Toast.LENGTH_SHORT).show();
+			break;
+		case ISBNResultHandler.INSERT_WANT_SUCCESS:
+			Toast.makeText(this, String.format(getResources().getString(R.string.book_insert_want_success), name), Toast.LENGTH_SHORT).show();
+			break;
+		case ISBNResultHandler.INSERT_WANT_FAILED:
+			Toast.makeText(this, String.format(getResources().getString(R.string.book_insert_want_failed), name), Toast.LENGTH_SHORT).show();
+			break;
+		case ISBNResultHandler.INSERT_ADDED:
+			Toast.makeText(this, String.format(getResources().getString(R.string.book_insert_added), name), Toast.LENGTH_SHORT).show();
+			break;
+		case ISBNResultHandler.INSERT_WANTED:
+			Toast.makeText(this, String.format(getResources().getString(R.string.book_insert_wanted), name), Toast.LENGTH_SHORT).show();
+			break;
+		}
+	}
   public void doubanComplete(Book book, ISBNResultHandler handler){
+	  Cursor c = getContentResolver().query(Book.CONTENT_URI_BOOKS, null, Book.COLUMN_ISBN13 +"='"+book.mISBN13 +"'", null, null);
+	  int stateInSQL = 0;
+	  Log.d("qiqi", "c count:" + c.getCount());
+	  if(c.getCount() > 0){
+		  c.moveToFirst();
+		  stateInSQL = c.getInt(Book.NUM_COLUMN_STATE);
+		  book.mState = stateInSQL;
+		  Log.d("qiqi", "stateInSQL:" + stateInSQL + " book.mState:" + book.mState);
+	  }
+	  Log.d("qiqi", "stateInSQL:" + stateInSQL);
 	  	TextView contentsTitle = (TextView) findViewById(R.id.meta_result_title);
 	  	TextView contentsOriginTitle = (TextView) findViewById(R.id.meta_result_origin_title);
 	  	TextView labelOriginTitle = (TextView) findViewById(R.id.result_page_origin_title);
@@ -618,22 +644,53 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 	  	final ISBNResultHandler isbnHandler = handler;
 	  	final Book mBook = book;
 	  	Button btnAdd = (Button) findViewById(R.id.add);
-	  	btnAdd.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				isbnHandler.saveBookToSQL(mBook, Book.BOOK_STATE_HAS);
-				restartPreviewAfterDelay(0L);
-			}
-		});
 	  	Button btnWant = (Button) findViewById(R.id.want);
-	  	btnWant.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				isbnHandler.saveBookToSQL(mBook, Book.BOOK_STATE_WANT);
-				restartPreviewAfterDelay(0L);
-			}
-		});
+	  	if(stateInSQL == 0){
+	  		btnAdd.setOnClickListener(new OnClickListener() {
+	  			
+	  			@Override
+	  			public void onClick(View v) {
+	  				showToast(mBook.mTitle, isbnHandler.saveBookToSQL(mBook, Book.BOOK_STATE_HAS));
+	  				restartPreviewAfterDelay(0L);
+	  			}
+	  		});
+		  	btnWant.setOnClickListener(new OnClickListener() {
+	  			@Override
+	  			public void onClick(View v) {
+	  				showToast(mBook.mTitle,isbnHandler.saveBookToSQL(mBook, Book.BOOK_STATE_WANT));
+	  				restartPreviewAfterDelay(0L);
+	  			}
+	  		});
+	  	}else if(stateInSQL == 1){
+	  		btnAdd.setOnClickListener(new OnClickListener() {
+	  			
+	  			@Override
+	  			public void onClick(View v) {
+	  				showToast(mBook.mTitle, isbnHandler.saveBookToSQL(mBook, Book.BOOK_STATE_HAS));
+	  				restartPreviewAfterDelay(0L);
+	  			}
+	  		});
+		  	btnWant.setOnClickListener(new OnClickListener() {
+	  			@Override
+	  			public void onClick(View v) {
+	  				showToast(mBook.mTitle,ISBNResultHandler.INSERT_WANTED);
+	  			}
+	  		});
+	  	}else if(stateInSQL >=2){
+	  		btnAdd.setOnClickListener(new OnClickListener() {
+	  			
+	  			@Override
+	  			public void onClick(View v) {
+	  				showToast(mBook.mTitle,ISBNResultHandler.INSERT_ADDED);
+	  			}
+	  		});
+		  	btnWant.setOnClickListener(new OnClickListener() {
+	  			@Override
+	  			public void onClick(View v) {
+	  				showToast(mBook.mTitle,ISBNResultHandler.INSERT_ADDED);
+	  			}
+	  		});
+	  	}
 //	    int scaledSize = Math.max(22, 32 - book.mTitle.length() / 4);
 //	    contentsTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
 //	    contentsOriginTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);

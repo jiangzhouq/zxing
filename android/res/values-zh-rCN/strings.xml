@@ -149,4 +149,10 @@
   <string name="result_page_translator">译者</string>
   <string name="result_control_add">已买</string>
   <string name="result_control_want">想买</string>
+  <string name="book_insert_add_success">%1$s 加入书库成功！</string>
+  <string name="book_insert_add_failed">%1$s 加入书库失败！</string>
+  <string name="book_insert_want_success">%1$s 加入购书单成功！</string>
+  <string name="book_insert_awant_failed">%1$s 加入购书单失败！</string>
+  <string name="book_insert_added">%1$s 已经存在于书库中!</string>
+  <string name="book_insert_wanted">%1$s 已经存在于购书单之中!</string>
 </resources>

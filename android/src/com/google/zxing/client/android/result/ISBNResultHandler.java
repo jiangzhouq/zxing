@@ -43,6 +43,13 @@ import com.loopj.android.http.JsonHttpResponseHandler;
  * @author dswitkin@google.com (Daniel Switkin)
  */
 public final class ISBNResultHandler extends ResultHandler {
+	public static final int INSERT_ADD_SUCCESS = 1;
+	public static final int INSERT_ADD_FAILED = 2;
+	public static final int INSERT_WANT_SUCCESS = 3;
+	public static final int INSERT_WANT_FAILED = 4;
+	public static final int INSERT_ADDED = 5;
+	public static final int INSERT_WANTED = 6;
+	
   private static final int[] buttons = {
       R.string.button_product_search,
       R.string.button_book_search,
@@ -102,10 +109,22 @@ public final class ISBNResultHandler extends ResultHandler {
 	  }
 	  return mBook;
   }
-  public void saveBookToSQL(Book mBook, int state){
-	  mBook.mAddTime = System.currentTimeMillis();
-	  mBook.mState = state;
+  public int saveBookToSQL(Book mBook, int state){
 		ContentResolver mResolver = mActivity.getContentResolver();
+		Cursor qCur = mResolver.query(Book.CONTENT_URI_BOOKS, null, Book.COLUMN_ISBN13 + "='" + mBook.mISBN13 + "'", null, null);
+		if(qCur.getCount() > 0){
+			Log.d("qiqi", "state:" + state + " mBook.mState:" + mBook.mState);
+			if(state == 2 && mBook.mState == 1){
+				ContentValues values = new ContentValues();
+				values.put(Book.COLUMN_STATE, state);
+				mResolver.update(Book.CONTENT_URI_BOOKS, values, Book.COLUMN_ISBN13 + "='" +mBook.mISBN13 + "'", null);
+				return INSERT_ADD_SUCCESS;
+			}else{
+				return INSERT_ADDED;//重复
+			}
+		}
+		mBook.mAddTime = System.currentTimeMillis();
+		  mBook.mState = state;
 		ContentValues values = new ContentValues();
 		values.put(Book.COLUMN_DOUBAN_ID, mBook.mDoubanId);
 		values.put(Book.COLUMN_ISBN10, mBook.mISBN10);
@@ -135,11 +154,18 @@ public final class ISBNResultHandler extends ResultHandler {
 		values.put(Book.COLUMN_EBOOK_PRICE, mBook.mEBookPrice);
 		values.put(Book.COLUMN_ADD_TIME, mBook.mAddTime);
 		values.put(Book.COLUMN_STATE, mBook.mState);
-		mResolver.insert(Book.CONTENT_URI_BOOKS, values);
-		Cursor cur = mResolver.query(Book.CONTENT_URI_BOOKS, null, null, null, null);
-		cur.moveToFirst();
-		Log.d("qiqi", "curcount:"+cur.getCount());
-		Log.d("qiqi", "cur:"+cur.getString(4));
+		if(mResolver.insert(Book.CONTENT_URI_BOOKS, values) != null){
+			if(mBook.mState == 1){
+				return INSERT_WANT_SUCCESS;//success
+			}else if (mBook.mState == 2){
+				return INSERT_ADD_SUCCESS;//success
+			}
+		}
+		if(state == 1){
+			return INSERT_WANT_FAILED;
+		}else{
+			return INSERT_ADD_FAILED;
+		}
   }
   public ISBNResultHandler(Activity activity, ParsedResult result, Result rawResult) {
     super(activity, result, rawResult);

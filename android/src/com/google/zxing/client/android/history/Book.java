@@ -37,6 +37,36 @@ public class Book {
 	public final static String COLUMN_ADD_TIME = "add_time";
 	public final static String COLUMN_STATE = "state";
 	
+	public final static int NUM_COLUMN_ID = 0;
+	public final static int NUM_COLUMN_DOUBAN_ID = 1;
+	public final static int NUM_COLUMN_ISBN10 = 2;
+	public final static int NUM_COLUMN_ISBN13 = 3;
+	public final static int NUM_COLUMN_TITLE = 4;
+	public final static int NUM_COLUMN_ORIGIN_TITLE = 5;
+	public final static int NUM_COLUMN_ALT_TITLE = 6;
+	public final static int NUM_COLUMN_SUB_TITLE = 7;
+	public final static int NUM_COLUMN_URL = 8;
+	public final static int NUM_COLUMN_ALT = 9;
+	public final static int NUM_COLUMN_IMAGE = 10;
+	public final static int NUM_COLUMN_IMAGES = 11;
+	public final static int NUM_COLUMN_AUTHOR = 12;
+	public final static int NUM_COLUMN_TRANSLATOR = 13;
+	public final static int NUM_COLUMN_PUBLISHER = 14;
+	public final static int NUM_COLUMN_PUBDATE = 15;
+	public final static int NUM_COLUMN_RATING = 16;
+	public final static int NUM_COLUMN_TAGS = 17;
+	public final static int NUM_COLUMN_BINDING = 18;
+	public final static int NUM_COLUMN_PRICE = 19;
+	public final static int NUM_COLUMN_SERIES = 20;
+	public final static int NUM_COLUMN_PAGES = 21;
+	public final static int NUM_COLUMN_AUTHOR_INTRO = 22;
+	public final static int NUM_COLUMN_SUMMARY = 23;
+	public final static int NUM_COLUMN_CATELOG = 24;
+	public final static int NUM_COLUMN_EBOOK_URL = 25;
+	public final static int NUM_COLUMN_EBOOK_PRICE = 26;
+	public final static int NUM_COLUMN_ADD_TIME = 27;
+	public final static int NUM_COLUMN_STATE = 28;
+	
 	public final static int BOOK_STATE_NO = 0;
 	public final static int BOOK_STATE_WANT = 1;
 	public final static int BOOK_STATE_HAS = 2;

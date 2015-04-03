@@ -149,4 +149,10 @@
   <string name="result_page_translator">Translator</string>
   <string name="result_control_add">Add</string>
   <string name="result_control_want">Want</string>
+  <string name="book_insert_add_success">Book %1$s has been inserted successfully!</string>
+  <string name="book_insert_add_failed">Book %1$s inserted failed!</string>
+  <string name="book_insert_want_success">Book %1$s has been inserted successfully!</string>
+  <string name="book_insert_want_failed">Book %1$s inserted failed!</string>
+  <string name="book_insert_added">Book %1$s already in the boolstore!</string>
+  <string name="book_insert_wanted">Book %1$s already in the wanted list!</string>
 </resources>
