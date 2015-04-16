@@ -16,23 +16,21 @@
 
 package com.google.zxing.client.android;
 
-import android.graphics.Bitmap;
-import com.google.zxing.BinaryBitmap;
-import com.google.zxing.DecodeHintType;
-import com.google.zxing.MultiFormatReader;
-import com.google.zxing.PlanarYUVLuminanceSource;
-import com.google.zxing.ReaderException;
-import com.google.zxing.Result;
-import com.google.zxing.common.HybridBinarizer;
+import java.io.ByteArrayOutputStream;
+import java.util.Map;
 
+import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
-import java.util.Map;
+import com.dtr.zbar.build.ZBarDecoder;
+import com.google.zxing.DecodeHintType;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.PlanarYUVLuminanceSource;
+import com.google.zxing.Result;
 
 final class DecodeHandler extends Handler {
 
@@ -73,47 +71,83 @@ final class DecodeHandler extends Handler {
    * @param height The height of the preview frame.
    */
   private void decode(byte[] data, int width, int height) {
-	  byte[] rotatedData = new byte[data.length];
-	  for (int y = 0; y < height; y++) {
-	      for (int x = 0; x < width; x++)
-	          rotatedData[x * height + height - y - 1] = data[x + y * width];
-	  }
+	// 这里需要将获取的data翻转一下，因为相机默认拿的的横屏的数据
+      byte[] rotatedData = new byte[data.length];
+      for (int y = 0; y < height; y++) {
+          for (int x = 0; x < width; x++)
+              rotatedData[x * height + height - y - 1] = data[x + y * width];
+      }
+      
+//	  byte[] rotatedData = new byte[data.length];
+//	  for (int y = 0; y < height; y++) {
+//	      for (int x = 0; x < width; x++)
+//	          rotatedData[x * height + height - y - 1] = data[x + y * width];
+//	  }
 	  int tmp = width;
 	  width = height;
 	  height = tmp;
 
-    long start = System.currentTimeMillis();
-    Result rawResult = null;
-    PlanarYUVLuminanceSource source = activity.getCameraManager().buildLuminanceSource(rotatedData, width, height);
-    if (source != null) {
-      BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-      try {
-        rawResult = multiFormatReader.decodeWithState(bitmap);
-      } catch (ReaderException re) {
-        // continue
-      } finally {
-        multiFormatReader.reset();
-      }
-    }
+	  Rect rect = activity.getCameraManager().getFramingRectInPreview();
 
-    Handler handler = activity.getHandler();
-    if (rawResult != null) {
-      // Don't log the barcode contents for security.
-      long end = System.currentTimeMillis();
-      Log.d(TAG, "Found barcode in " + (end - start) + " ms");
-      if (handler != null) {
-        Message message = Message.obtain(handler, R.id.decode_succeeded, rawResult);
-        Bundle bundle = new Bundle();
-        bundleThumbnail(source, bundle);        
-        message.setData(bundle);
-        message.sendToTarget();
+      ZBarDecoder zBarDecoder = new ZBarDecoder();
+      String result = zBarDecoder.decodeCrop(rotatedData, width, height, rect.left, rect.top, rect.width(), rect.height());
+
+      if (result != null) {
+          if (null != activity.getHandler()) {
+              Message msg = new Message();
+              msg.obj = new Result(result, null, null, null);
+              msg.what = R.id.decode_succeeded;
+              activity.getHandler().sendMessage(msg);
+              
+          }
+          // Message message = Message.obtain(activity.getHandler(),
+          // R.id.decode_succeeded, result);
+          // if (null != message) {
+          // message.sendToTarget();
+          // }
+      } else {
+          // Message message = Message.obtain(activity.getHandler(),
+          // R.id.decode_failed);
+          // if (null != message) {
+          // message.sendToTarget();
+          // }
+          if (null != activity.getHandler()) {
+              activity.getHandler().sendEmptyMessage(R.id.decode_failed);
+          }
       }
-    } else {
-      if (handler != null) {
-        Message message = Message.obtain(handler, R.id.decode_failed);
-        message.sendToTarget();
-      }
-    }
+      
+//    long start = System.currentTimeMillis();
+//    Result rawResult = null;
+//    PlanarYUVLuminanceSource source = activity.getCameraManager().buildLuminanceSource(rotatedData, width, height);
+//    if (source != null) {
+//      BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+//      try {
+//        rawResult = multiFormatReader.decodeWithState(bitmap);
+//      } catch (ReaderException re) {
+//        // continue
+//      } finally {
+//        multiFormatReader.reset();
+//      }
+//    }
+//
+//    Handler handler = activity.getHandler();
+//    if (rawResult != null) {
+//      // Don't log the barcode contents for security.
+//      long end = System.currentTimeMillis();
+//      Log.d(TAG, "Found barcode in " + (end - start) + " ms");
+//      if (handler != null) {
+//        Message message = Message.obtain(handler, R.id.decode_succeeded, rawResult);
+//        Bundle bundle = new Bundle();
+//        bundleThumbnail(source, bundle);        
+//        message.setData(bundle);
+//        message.sendToTarget();
+//      }
+//    } else {
+//      if (handler != null) {
+//        Message message = Message.obtain(handler, R.id.decode_failed);
+//        message.sendToTarget();
+//      }
+//    }
   }
 
   private static void bundleThumbnail(PlanarYUVLuminanceSource source, Bundle bundle) {
