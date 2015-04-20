@@ -120,7 +120,7 @@ public final class ISBNResultHandler extends ResultHandler {
 				mResolver.update(Book.CONTENT_URI_BOOKS, values, Book.COLUMN_ISBN13 + "='" +mBook.mISBN13 + "'", null);
 				return INSERT_ADD_SUCCESS;
 			}else{
-				return INSERT_ADDED;//重复
+				return INSERT_ADDED;//������
 			}
 		}
 		mBook.mAddTime = System.currentTimeMillis();
@@ -135,7 +135,11 @@ public final class ISBNResultHandler extends ResultHandler {
 		values.put(Book.COLUMN_SUB_TITLE, mBook.mSubTitle);
 		values.put(Book.COLUMN_URL, mBook.mUrl);
 		values.put(Book.COLUMN_ALT, mBook.mAlt);
-		values.put(Book.COLUMN_IMAGE, mBook.mImage);
+		try {
+			values.put(Book.COLUMN_IMAGE, (new JSONObject(mBook.mImages)).getString("large"));
+		} catch (JSONException e) {
+			values.put(Book.COLUMN_IMAGE, mBook.mImage);
+		}
 		values.put(Book.COLUMN_IMAGES, mBook.mImages);
 		values.put(Book.COLUMN_AUTHOR, mBook.mAuthor);
 		values.put(Book.COLUMN_TRANSLATOR, mBook.mTranslator);
