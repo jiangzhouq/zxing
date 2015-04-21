@@ -15,6 +15,7 @@
  limitations under the License.
  -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
+    	xmlns:slideswitch="http://schemas.android.com/apk/res/com.google.zxing.client.android"
        xmlns:tools="http://schemas.android.com/tools">
 
   <SurfaceView android:id="@+id/preview_view"
@@ -257,7 +258,6 @@
               android:visibility="gone"/> -->
 
     </LinearLayout> 
-
   </LinearLayout>
 
   <TextView android:id="@+id/status_view"
@@ -267,5 +267,14 @@
             android:background="@color/transparent"
             android:text="@string/msg_default_status"
             android:textColor="@color/status_text"/>
-
+  <com.leaking.slideswitch.SlideSwitch
+      android:id="@+id/slideswitch"
+        android:layout_width="100dip"
+        android:layout_height="40dip"
+        android:layout_marginTop="100dip"
+        android:layout_gravity="center_horizontal"
+        slideswitch:isOpen="false"
+        slideswitch:shape="circle"
+        slideswitch:themeColor="#f200aa96" >
+    </com.leaking.slideswitch.SlideSwitch>
 </merge>

@@ -18,7 +18,6 @@ package com.google.zxing.client.android;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Map;
 
 import org.json.JSONArray;
@@ -40,7 +39,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -56,7 +54,6 @@ import android.widget.Toast;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.DecodeHintType;
 import com.google.zxing.Result;
-import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.camera.CameraManager;
 import com.google.zxing.client.android.clipboard.ClipboardInterface;
@@ -68,6 +65,8 @@ import com.google.zxing.client.android.result.ISBNResultHandler;
 import com.google.zxing.client.android.result.ResultHandler;
 import com.google.zxing.client.android.result.ResultHandlerFactory;
 import com.google.zxing.client.android.share.ShareActivity;
+import com.leaking.slideswitch.SlideSwitch;
+import com.leaking.slideswitch.SlideSwitch.SlideListener;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
@@ -106,6 +105,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
   private BeepManager beepManager;
   private AmbientLightManager ambientLightManager;
 
+  private SlideSwitch mSlide;
+  private boolean mContiScan = false;
   ViewfinderView getViewfinderView() {
     return viewfinderView;
   }
@@ -131,6 +132,19 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     beepManager = new BeepManager(this);
     ambientLightManager = new AmbientLightManager(this);
 
+    mSlide = (SlideSwitch) findViewById(R.id.slideswitch);
+    mSlide.setSlideListener(new SlideListener() {
+		
+		@Override
+		public void open() {
+			mContiScan = true;
+		}
+		
+		@Override
+		public void close() {
+			mContiScan = false;
+		}
+	});
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
   }
 
@@ -253,8 +267,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
-    MenuInflater menuInflater = getMenuInflater();
-    menuInflater.inflate(R.menu.capture, menu);
+//    MenuInflater menuInflater = getMenuInflater();
+//    menuInflater.inflate(R.menu.capture, menu);
     return super.onCreateOptionsMenu(menu);
   }
 
@@ -351,9 +365,9 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     if (fromLiveScan) {
       historyManager.addHistoryItem(rawResult, resultHandler);
       // Then not from history, so beep/vibrate and we have an image to draw on
-      beepManager.playBeepSoundAndVibrate();
       drawResultPoints(barcode, scaleFactor, rawResult);
     }
+    beepManager.playBeepSoundAndVibrate();
     
     
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -541,6 +555,16 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 		}
 	  	final ISBNResultHandler isbnHandler = handler;
 	  	final Book mBook = book;
+	  	if(mContiScan){
+	  		if(stateInSQL == 0){
+  				showToast(mBook.mTitle, isbnHandler.saveBookToSQL(mBook, Book.BOOK_STATE_HAS));
+		  	}else if(stateInSQL == 1){
+  				showToast(mBook.mTitle, isbnHandler.saveBookToSQL(mBook, Book.BOOK_STATE_HAS));
+		  	}else if(stateInSQL >=2){
+  				showToast(mBook.mTitle,ISBNResultHandler.INSERT_ADDED);
+		  	}
+	  		restartPreviewAfterDelay(3000L);
+	  	}
 	  	Button btnAdd = (Button) findViewById(R.id.add);
 	  	Button btnWant = (Button) findViewById(R.id.want);
 	  	if(stateInSQL == 0){
@@ -618,9 +642,11 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
       return;
     }
 
-    statusView.setVisibility(View.GONE);
-    viewfinderView.setVisibility(View.GONE);
-    resultView.setVisibility(View.VISIBLE);
+    if(!mContiScan){
+    	statusView.setVisibility(View.GONE);
+    	viewfinderView.setVisibility(View.GONE);
+    	resultView.setVisibility(View.VISIBLE);
+    }
 
 //    ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
 //    if (barcode == null) {
