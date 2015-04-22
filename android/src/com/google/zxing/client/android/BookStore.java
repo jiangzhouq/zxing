@@ -33,29 +33,12 @@ public class BookStore extends Activity {
     // Supertype overrides
     // =============================================================================
 
-	private FancyCoverFlow fancyCoverFlow;
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setContentView(R.layout.book_store_1);
-        
-        Cursor cur = getContentResolver().query(Book.CONTENT_URI_BOOKS, new String[]{Book.COLUMN_IMAGE}, null, null, null);
-        String[] imgs = new String[cur.getCount()];
-        cur.moveToFirst();
-        for(int i = 0; i < cur.getCount(); i++){
-        	imgs[i] = cur.getString(0);
-        	cur.moveToNext();
-        }
-        this.fancyCoverFlow = (FancyCoverFlow) this.findViewById(R.id.fancyCoverFlow);
-        this.fancyCoverFlow.setAdapter(new FancyCoverFlowSampleAdapter(this, imgs));
-        this.fancyCoverFlow.setUnselectedAlpha(0.2f);
-        this.fancyCoverFlow.setUnselectedSaturation(0.0f);
-        this.fancyCoverFlow.setUnselectedScale(0.2f);
-        this.fancyCoverFlow.setSpacing(200);
-        this.fancyCoverFlow.setMaxRotation(0);
-        this.fancyCoverFlow.setScaleDownGravity(0.2f);
-        this.fancyCoverFlow.setActionDistance(FancyCoverFlow.ACTION_DISTANCE_AUTO);
-    
+        this.setContentView(R.layout.bookstore_activity);
+//        getFragmentManager().beginTransaction().replace(R.id.main_activity, new FragmentFlowView());
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
